@@ -50,7 +50,7 @@ def cliente_novo (clientes):
         endereco_completo = ""
 
     if cliente_cpf and cliente_data_nascimento and cliente_nome:
-        clientes.append({"nome": cliente_nome,"data_nascimento": cliente_data_nascimento,"cpf": cliente_cpf, "endereco":endereco_completo, "senha":"123"})
+        clientes.append({"nome": cliente_nome,"data_nascimento": cliente_data_nascimento,"cpf": cliente_cpf, "endereco":endereco_completo})
         input("Cliente cadastrado com sucesso!\nPressione enter para retornar...")
 
 def cliente_listar(clientes):
@@ -189,17 +189,20 @@ def saque (contas, /, *, saldo, valor, extrato, limite, numero_saques, LIMITE_SA
                     return
 
             else:
-                print("Operação falhou! O valor informado é inválido.")
+                input("Operação falhou! O valor informado é inválido.\n\nPressione enter para retornar")
                 break
     if not conta_encontrada:
         input("\n\nConta não cadastrada.\nPressione enter para retornar")
 
-def extrato_exibir (saldo, /,*, extrato, contas, cliente_conta):
+def extrato_exibir (saldo, /,*, extrato, contas, cliente_conta,clientes):
     conta_encontrada = False
-    print("\n================ EXTRATO ================")
+    print("\n================= EXTRATO =================")
     for conta_selecionada in contas:
         if conta_selecionada['conta'] == cliente_conta:
+            cliente_conta_cpf = conta_selecionada['cliente']
+            cliente_extrato_nome = filtrar_cliente(cliente_conta_cpf, clientes)
             conta_encontrada = True
+            print (f"Conta de: {cliente_extrato_nome['nome'].capitalize()}")
             print("Não foram realizadas movimentações." if not conta_selecionada['extrato'] else conta_selecionada['extrato'])
             print(f"\nSaldo: R$ {conta_selecionada['saldo']:.2f}")
             print("==========================================")
@@ -238,7 +241,7 @@ while True:
 
     elif opcao == "e":
         cliente_conta = input("Insira a conta que você deseja ver o extrato: ").zfill(4)
-        extrato_exibir (saldo, extrato=extrato, contas=contas, cliente_conta=cliente_conta)
+        extrato_exibir (saldo, extrato=extrato, contas=contas, cliente_conta=cliente_conta, clientes=clientes)
 
     elif opcao == "q":
         break
