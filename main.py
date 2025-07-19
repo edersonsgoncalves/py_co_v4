@@ -31,9 +31,10 @@ class Cliente:
         self.indice_conta = 0
 
     def realizar_transacao(self, conta, transacao):
-        # TODO: validar o número de transações e invalidar a operação se for necessário
-        # print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
-        transacao.registrar(conta)
+        if conta.limite_transacoes > 0:
+            transacao.registrar(conta)
+        else :
+            print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
 
     def adicionar_conta(self, conta):
         self.contas.append(conta)
@@ -52,6 +53,7 @@ class Conta:
         self._agencia = "0001"
         self._cliente = cliente
         self._historico = Historico()
+        self.limite_transacoes = 10
 
     @classmethod
     def nova_conta(cls, cliente, numero):
@@ -111,7 +113,7 @@ class ContaCorrente(Conta):
         self._limite_saques = limite_saques
 
     @classmethod
-    def nova_conta(cls, cliente, numero, limite, limite_saques):
+    def nova_conta(cls, cliente, numero, limite=500, limite_saques=3):
         return cls(numero, cliente, limite, limite_saques)
 
     def sacar(self, valor):
@@ -164,7 +166,14 @@ class Historico:
 
     # TODO: filtrar todas as transações realizadas no dia
     def transacoes_do_dia(self):
-        pass
+        transacoes_hoje = []
+        hoje = datetime.now().strftime("%d-%m-%Y")
+
+        for transacao in self._transacoes:
+            if hoje in transacao.data:
+                transacoes_hoje.append(transacao)
+        
+        return transacoes_hoje
 
 class Transacao(ABC):
     @property
@@ -188,6 +197,7 @@ class Saque(Transacao):
 
         if sucesso_transacao:
             conta.historico.adicionar_transacao(self)
+            conta.limite_transacoes -= 1
 
 class Deposito(Transacao):
     def __init__(self, valor):
@@ -202,6 +212,7 @@ class Deposito(Transacao):
 
         if sucesso_transacao:
             conta.historico.adicionar_transacao(self)
+            conta.limite_transacoes -= 1
 
 def log_transacao(func):
     def envelope(*args, **kwargs):
@@ -298,7 +309,7 @@ def exibir_extrato(clientes):
     tem_transacao = False
     for transacao in conta.historico.gerar_relatorio():
         tem_transacao = True
-        extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
+        extrato += f"\n{transacao['tipo']}:\t{transacao['data'].strftime("%d-%m-%Y %H:%M:%S")}\n\tR$ {transacao['valor']:.2f}"
 
     if not tem_transacao:
         extrato = "Não foram realizadas movimentações"
@@ -306,6 +317,9 @@ def exibir_extrato(clientes):
     print(extrato)
     print(f"\nSaldo:\n\tR$ {conta.saldo:.2f}")
     print("==========================================")
+    print (f"Limite de Transçações: {conta.limite_transacoes}")
+    input("Pressione Enter para voltar ao menu inicial...") 
+
 
 @log_transacao
 def criar_cliente(clientes):
@@ -349,6 +363,19 @@ def listar_contas(contas):
         print("=" * 100)
         print(textwrap.dedent(str(conta)))
 
+def cliente_listar(clientes):
+    if not clientes:
+        print ("Nenhum cliente cadastrado")
+
+    for cliente in clientes:
+        print (f"""
+CPF: {cliente.cpf}
+Cliente: {cliente.nome.capitalize()}
+Data Nascimento: {cliente.data_nascimento}
+Endereço: {cliente.endereco}
+""")
+    input("Pressione Enter para voltar ao menu inicial...") 
+
 def main():
     clientes = []
     contas = []
@@ -384,4 +411,5 @@ def main():
         else:
             print("\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@")
 
+    
 main()
